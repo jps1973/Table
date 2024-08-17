@@ -324,6 +324,9 @@ LRESULT CALLBACK MainWndProc( HWND hWndMain, UINT uMessage, WPARAM wParam, LPARA
 		{
 			// A close message
 
+			// Save list view window
+			ListViewWindowSave( "Save.html" );
+
 			// Destroy main window
 			DestroyWindow( hWndMain );
 
@@ -461,7 +464,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 
 			// Add data to list view window
 			ListViewWindowAddItem( "00" );
-			ListViewWindowAddItem( "01" );
+			ListViewWindowAddItem( "10" );
 			ListViewWindowSetItemText( 0, 1, "01" );
 			ListViewWindowSetItemText( 1, 1, "11" );
 

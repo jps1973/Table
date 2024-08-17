@@ -8,6 +8,8 @@
 #include "Ascii.h"
 #include "Common.h"
 
+#include "HtmlFile.h"
+
 #define LIST_VIEW_WINDOW_CLASS_NAME												WC_LISTVIEW
 
 #define LIST_VIEW_WINDOW_EXTENDED_STYLE											LVS_EX_FULLROWSELECT
@@ -34,7 +36,11 @@ BOOL ListViewWindowGetRect( LPRECT lpRect );
 
 BOOL ListViewWindowHandleNotifyMessage( WPARAM wParam, LPARAM lParam, void( *lpDoubleClickFunction )( LPCTSTR lpszItemText, int nWhichItem ), void( *lpSelectionChangedFunction )( LPCTSTR lpszItemText, int nWhichItem ) );
 
+BOOL ListViewWindowLoad( LPCTSTR lpszFileName );
+
 BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint = TRUE );
+
+BOOL ListViewWindowSave( LPCTSTR lpszFileName );
 
 HWND ListViewWindowSetFocus();
 

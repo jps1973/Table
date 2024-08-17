@@ -51,7 +51,7 @@ int ListViewWindowAddItem( LPCTSTR lpszItemText )
 	LVITEM lvItem;
 	int nItemCount;
 
-	// Count items on list box window
+	// Count items on list view window
 	nItemCount = SendMessage( g_hWndListView, LVM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
 
 	// Clear list view item structure
@@ -153,7 +153,7 @@ int ListViewWindowGetItemText( int nWhichItem, int nWhichSubItem, LPTSTR lpszIte
 	lvItem.iSubItem		= nWhichSubItem;
 	lvItem.pszText		= lpszItemText;
 
-	// Add item to list view window
+	// Get list view window item text
 	nResult = SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )nWhichItem, ( LPARAM )&lvItem );
 
 	return nResult;
@@ -262,12 +262,182 @@ BOOL ListViewWindowHandleNotifyMessage( WPARAM, LPARAM lParam, void( *lpDoubleCl
 
 } // End of function ListViewWindowHandleNotifyMessage
 
+BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully opened file
+		DWORD dwFileSize;
+
+		// Get file size
+		dwFileSize = GetFileSize( hFile, NULL );
+
+		// Ensure that file size was got
+		if( dwFileSize != INVALID_FILE_SIZE )
+		{
+			// Successfully got file size
+
+			// Allocate string memory
+			LPTSTR lpszFileText = new char[ STRING_LENGTH + sizeof( char ) ];
+
+			// Read file text
+			if( ReadFile (hFile, lpszFileText, dwFileSize, NULL, NULL ) )
+			{
+				// Successfully read file text
+
+				// Terminate file text
+				lpszFileText[ dwFileSize ] = ( char )NULL;
+
+				// Display file text
+				MessageBox( NULL, lpszFileText, lpszFileName, ( MB_OK | MB_ICONINFORMATION ) );
+
+				// Update return value
+				bResult = TRUE;
+
+			} // End of successfully read file text
+
+			// Free string memory
+			delete [] lpszFileText;
+
+		} // End of successfully got file size
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully opened file
+
+	return bResult;
+
+} // End of function ListViewWindowLoad
+
 BOOL ListViewWindowMove( int nX, int nY, int nWidth, int nHeight, BOOL bRepaint )
 {
 	// Move list view window
 	return ::MoveWindow( g_hWndListView, nX, nY, nWidth, nHeight, bRepaint );
 
 } // End of function ListViewWindowMove
+
+BOOL ListViewWindowSave( LPCTSTR lpszFileName )
+{
+	BOOL bResult = FALSE;
+
+	HANDLE hFile;
+
+	// Open file
+	hFile = CreateFile( lpszFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL );
+
+	// Ensure that file was opened
+	if( hFile != INVALID_HANDLE_VALUE )
+	{
+		// Successfully opened file
+
+		// Allocate string memory
+		LPTSTR lpszHtmlFilePrefix = new char[ STRING_LENGTH ];
+
+		// Format html file prefix
+		wsprintf( lpszHtmlFilePrefix, HTML_FILE_PREFIX_FORMAT_STRING, lpszFileName, lpszFileName );
+
+		// Write html file prefix to file
+		if( WriteFile( hFile, lpszHtmlFilePrefix, lstrlen( lpszHtmlFilePrefix ), NULL, NULL ) )
+		{
+			// Successfully wrote html file prefix to file
+			LVITEM lvItem;
+			int nItemCount;
+
+			// Allocate string memory
+			LPTSTR lpszItemText = new char[ STRING_LENGTH ];
+
+			// Clear list view item structure
+			ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+			// Initialise list view item structure
+			lvItem.mask			= LVIF_TEXT;
+			lvItem.cchTextMax	= STRING_LENGTH;
+			lvItem.pszText		= lpszItemText;
+
+			// Count items on list view window
+			nItemCount = SendMessage( g_hWndListView, LVM_GETITEMCOUNT, ( WPARAM )NULL, ( LPARAM )NULL );
+
+			// Write table prefix to file
+			WriteFile( hFile, HTML_FILE_TABLE_PREFIX, lstrlen( HTML_FILE_TABLE_PREFIX ), NULL, NULL );
+
+			// Loop through items on list view window
+			for( lvItem.iItem = 0; lvItem.iItem < nItemCount; lvItem.iItem ++ )
+			{
+				// Write table row prefix to file
+				WriteFile( hFile, HTML_FILE_TABLE_ROW_PREFIX, lstrlen( HTML_FILE_TABLE_ROW_PREFIX ), NULL, NULL );
+
+				// Loop through sub-items on list view window
+				for( lvItem.iSubItem = 0; lvItem.iSubItem < g_nColumnCount; lvItem.iSubItem ++ )
+				{
+					// Write table item prefix to file
+					WriteFile( hFile, HTML_FILE_TABLE_ITEM_PREFIX, lstrlen( HTML_FILE_TABLE_ITEM_PREFIX ), NULL, NULL );
+
+					// Get list view window item text
+					if( SendMessage( g_hWndListView, LVM_GETITEMTEXT, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem ) )
+					{
+						// Successfully got list view window item text
+
+						// Write table item text to file
+						WriteFile( hFile, lpszItemText, lstrlen( lpszItemText ), NULL, NULL );
+
+					} // End of successfully got list view window item text
+
+					// Write table item suffix to file
+					WriteFile( hFile, HTML_FILE_TABLE_ITEM_SUFFIX, lstrlen( HTML_FILE_TABLE_ITEM_SUFFIX ), NULL, NULL );
+
+				}; // End of loop through sub-items on list view window
+
+				// Write table row suffix to file
+				WriteFile( hFile, HTML_FILE_TABLE_ROW_SUFFIX, lstrlen( HTML_FILE_TABLE_ROW_SUFFIX ), NULL, NULL );
+
+			}; // End of loop through items on list view window
+
+			// Write table suffix to file
+			WriteFile( hFile, HTML_FILE_TABLE_SUFFIX, lstrlen( HTML_FILE_TABLE_SUFFIX ), NULL, NULL );
+
+			// Write html file suffix to file
+			WriteFile( hFile, HTML_FILE_SUFFIX, lstrlen( HTML_FILE_SUFFIX ), NULL, NULL );
+
+			// Free string memory
+			delete [] lpszItemText;
+
+		} // End of successfully wrote html file prefix to file
+
+
+		/*
+		LPCTSTR lpszFileText = "qwertyuiop";
+
+		// Write text to file
+		if( WriteFile( hFile, lpszFileText, lstrlen( lpszFileText ), NULL, NULL ) )
+		{
+			// Successfully wrote text to file
+
+			// Update return value
+			bResult = TRUE;
+
+		} // End of successfully wrote text to file
+
+		// Free string memory
+		delete [] lpszFileText;
+		*/
+
+		// Close file
+		CloseHandle( hFile );
+
+	} // End of successfully opened file
+
+	return bResult;
+
+} // End of function ListViewWindowSave
 
 HWND ListViewWindowSetFocus()
 {
