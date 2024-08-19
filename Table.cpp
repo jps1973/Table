@@ -471,6 +471,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			// Auto-size all columns
 			ListViewWindowAutoSizeAllColumns();
 
+			// Load list view window
+			ListViewWindowLoad( "Save.html" );
+
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
 			{

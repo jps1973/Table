@@ -292,12 +292,126 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 			if( ReadFile (hFile, lpszFileText, dwFileSize, NULL, NULL ) )
 			{
 				// Successfully read file text
+				LPTSTR lpszTable;
 
 				// Terminate file text
 				lpszFileText[ dwFileSize ] = ( char )NULL;
 
-				// Display file text
-				MessageBox( NULL, lpszFileText, lpszFileName, ( MB_OK | MB_ICONINFORMATION ) );
+				// Find start of table
+				lpszTable = strstr( lpszFileText, HTML_FILE_TABLE_PREFIX );
+
+				// Ensure that start of table was found
+				if( lpszTable )
+				{
+					// Successfully found start of table
+					LPTSTR lpszTableSuffix;
+
+					// Find table suffix
+					lpszTableSuffix = strstr( lpszTable, HTML_FILE_TABLE_SUFFIX );
+
+					// Ensure that table suffix was found
+					if( lpszTableSuffix )
+					{
+						// Successfully found table suffix
+						LPTSTR lpszRowPrefix;
+						LPTSTR lpszRowSuffix;
+						DWORD dwRowLength;
+						LPTSTR lpszItemPrefix;
+						LPTSTR lpszItemSuffix;
+						LPTSTR lpszItemStart;
+						DWORD dwItemLength;
+
+						// Allocate string memory
+						LPTSTR lpszRow	= new char[ STRING_LENGTH ];
+						LPTSTR lpszItem	= new char[ STRING_LENGTH ];
+
+						// Terminate table after suffix
+						lpszTableSuffix[ lstrlen( HTML_FILE_TABLE_SUFFIX ) ] = ( char )NULL;
+
+						// Find first row prefix
+						lpszRowPrefix = strstr( lpszTable, HTML_FILE_TABLE_ROW_PREFIX );
+
+						// Loop through all table rows
+						while( lpszRowPrefix )
+						{
+							// Find row suffix
+							lpszRowSuffix = strstr( lpszRowPrefix, HTML_FILE_TABLE_ROW_SUFFIX );
+
+							// Ensure that row suffix was found
+							if( lpszRowSuffix )
+							{
+								// Successfully found row suffix
+
+								// Calculate row length
+								dwRowLength = ( ( lpszRowSuffix + lstrlen( HTML_FILE_TABLE_ROW_SUFFIX )) - lpszRowPrefix );
+
+								// Store row
+								lstrcpyn( lpszRow, lpszRowPrefix, dwRowLength );
+
+								// Find first item prefix in row
+								lpszItemPrefix = strstr( lpszRow, HTML_FILE_TABLE_ITEM_PREFIX );
+
+								// Loop through all items in row
+								while( lpszItemPrefix )
+								{
+									// Find item suffix
+									lpszItemSuffix = strstr( lpszItemPrefix, HTML_FILE_TABLE_ITEM_SUFFIX );
+
+									// Ensure that item suffix was found
+									if( lpszItemSuffix )
+									{
+										// Successfully found item suffix
+
+										// Get start of item
+										lpszItemStart = ( lpszItemPrefix + lstrlen( HTML_FILE_TABLE_ITEM_PREFIX ) );
+
+										// Calculate item length
+										dwItemLength = ( lpszItemSuffix - lpszItemStart );
+
+										// Store item
+										lstrcpyn( lpszItem, lpszItemStart, ( dwItemLength + sizeof( char ) ) );
+
+										// Display file text
+										MessageBox( NULL, lpszItem, "Item", ( MB_OK | MB_ICONINFORMATION ) );
+
+										// Find next item prefix
+										lpszItemPrefix = strstr( lpszItemSuffix, HTML_FILE_TABLE_ITEM_PREFIX );
+
+									} // End of successfully found item suffix
+									else
+									{
+										// Unable to find item suffix
+
+										// Force exit from loops
+										lpszRowPrefix	= NULL;
+										lpszItemPrefix	= NULL;
+
+									} // End of unable to find item suffix
+
+								}; // End of loop through all items in row
+
+								// Find next row prefix
+								lpszRowPrefix = strstr( lpszRowSuffix, HTML_FILE_TABLE_ROW_PREFIX );
+
+							} // End of successfully found row suffix
+							else
+							{
+								// Unable to find row suffix
+
+								// Force exit from loop
+								lpszRowPrefix = NULL;
+
+							} // End of unable to find row suffix
+
+						}; // End of loop through all table rows
+
+						// Free string memory
+						delete [] lpszRow;
+						delete [] lpszItem;
+
+					} // End of successfully found table suffix
+
+				} // End of successfully found start of table
 
 				// Update return value
 				bResult = TRUE;
@@ -411,24 +525,6 @@ BOOL ListViewWindowSave( LPCTSTR lpszFileName )
 			delete [] lpszItemText;
 
 		} // End of successfully wrote html file prefix to file
-
-
-		/*
-		LPCTSTR lpszFileText = "qwertyuiop";
-
-		// Write text to file
-		if( WriteFile( hFile, lpszFileText, lstrlen( lpszFileText ), NULL, NULL ) )
-		{
-			// Successfully wrote text to file
-
-			// Update return value
-			bResult = TRUE;
-
-		} // End of successfully wrote text to file
-
-		// Free string memory
-		delete [] lpszFileText;
-		*/
 
 		// Close file
 		CloseHandle( hFile );
