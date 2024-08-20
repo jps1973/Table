@@ -320,16 +320,28 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 						LPTSTR lpszItemSuffix;
 						LPTSTR lpszItemStart;
 						DWORD dwItemLength;
+						LVITEM lvItem;
 
 						// Allocate string memory
-						LPTSTR lpszRow	= new char[ STRING_LENGTH ];
-						LPTSTR lpszItem	= new char[ STRING_LENGTH ];
+						LPTSTR lpszRow			= new char[ STRING_LENGTH ];
+						LPTSTR lpszItem			= new char[ STRING_LENGTH ];
+						LPTSTR lpszColumnTitle	= new char[ STRING_LENGTH ];
 
 						// Terminate table after suffix
 						lpszTableSuffix[ lstrlen( HTML_FILE_TABLE_SUFFIX ) ] = ( char )NULL;
 
 						// Find first row prefix
 						lpszRowPrefix = strstr( lpszTable, HTML_FILE_TABLE_ROW_PREFIX );
+
+						// Clear list view item structure
+						ZeroMemory( &lvItem, sizeof( lvItem ) );
+
+						// Initialise list view item structure
+						lvItem.mask			= LVIF_TEXT;
+						lvItem.cchTextMax	= STRING_LENGTH;
+						lvItem.iItem		= 0;
+						lvItem.iSubItem		= 0;
+						lvItem.pszText		= ( LPTSTR )lpszItem;
 
 						// Loop through all table rows
 						while( lpszRowPrefix )
@@ -347,6 +359,12 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 
 								// Store row
 								lstrcpyn( lpszRow, lpszRowPrefix, dwRowLength );
+
+								// Reset list view item structure for current row
+								lvItem.iSubItem = 0;
+
+								// Add row to list view window
+								lvItem.iItem = SendMessage( g_hWndListView, LVM_INSERTITEM, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
 
 								// Find first item prefix in row
 								lpszItemPrefix = strstr( lpszRow, HTML_FILE_TABLE_ITEM_PREFIX );
@@ -371,8 +389,22 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 										// Store item
 										lstrcpyn( lpszItem, lpszItemStart, ( dwItemLength + sizeof( char ) ) );
 
-										// Display file text
-										MessageBox( NULL, lpszItem, "Item", ( MB_OK | MB_ICONINFORMATION ) );
+										// Ensure that sub-item (column) number is valid
+										while( lvItem.iSubItem >= g_nColumnCount )
+										{
+											// Format column title
+											wsprintf( lpszColumnTitle, LIST_VIEW_WINDOW_COLUMN_TITLE_FORMAT_STRING, ( g_nColumnCount + LIST_VIEW_WINDOW_FIRST_COLUMN_NUMBER ) );
+
+											// Add column to list view window
+											ListViewWindowAddColumn( lpszColumnTitle, LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH );
+
+										} // End of loop to ensure that sub-item (column) number is valid
+
+										// Show item on list view window
+										SendMessage( g_hWndListView, LVM_SETITEMTEXT, ( WPARAM )lvItem.iItem, ( LPARAM )&lvItem );
+
+										// Update list view item structure for next sub-item
+										lvItem.iSubItem ++;
 
 										// Find next item prefix
 										lpszItemPrefix = strstr( lpszItemSuffix, HTML_FILE_TABLE_ITEM_PREFIX );
@@ -389,6 +421,9 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 									} // End of unable to find item suffix
 
 								}; // End of loop through all items in row
+
+								// Update list view item structure for next item
+								lvItem.iItem ++;
 
 								// Find next row prefix
 								lpszRowPrefix = strstr( lpszRowSuffix, HTML_FILE_TABLE_ROW_PREFIX );
@@ -408,6 +443,7 @@ BOOL ListViewWindowLoad( LPCTSTR lpszFileName )
 						// Free string memory
 						delete [] lpszRow;
 						delete [] lpszItem;
+						delete [] lpszColumnTitle;
 
 					} // End of successfully found table suffix
 

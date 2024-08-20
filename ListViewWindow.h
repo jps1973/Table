@@ -17,6 +17,8 @@
 #define LIST_VIEW_WINDOW_TEXT													NULL
 
 #define LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH									100
+#define LIST_VIEW_WINDOW_COLUMN_TITLE_FORMAT_STRING								"Column %d"
+#define LIST_VIEW_WINDOW_FIRST_COLUMN_NUMBER									1
 
 BOOL IsListViewWindow( HWND hWnd );
 

@@ -458,21 +458,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE, LPTSTR, int nCmdShow )
 			// Update main window
 			UpdateWindow( hWndMain );
 
-			// Add columns to list view window
-			ListViewWindowAddColumn( "Column 1", LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH );
-			ListViewWindowAddColumn( "Column 2", LIST_VIEW_WINDOW_DEFAULT_COLUMN_WIDTH );
-
-			// Add data to list view window
-			ListViewWindowAddItem( "00" );
-			ListViewWindowAddItem( "10" );
-			ListViewWindowSetItemText( 0, 1, "01" );
-			ListViewWindowSetItemText( 1, 1, "11" );
-
-			// Auto-size all columns
-			ListViewWindowAutoSizeAllColumns();
-
 			// Load list view window
 			ListViewWindowLoad( "Save.html" );
+
+			// Auto-size all list view window columns
+			ListViewWindowAutoSizeAllColumns();
 
 			// Message loop
 			while( GetMessage( &msg, NULL, 0, 0 ) > 0 )
